@@ -58,6 +58,10 @@ func WithIssuedAt() ParserOption {
 
 // WithExpirationRequired returns the ParserOption to make exp claim required.
 // By default exp claim is optional.
+//
+// This only makes an *absent* exp claim an error. An exp claim that is present
+// but unusable, such as an explicit JSON null, is rejected with
+// [ErrInvalidType] whether or not this option is used; see [Claims].
 func WithExpirationRequired() ParserOption {
 	return func(p *Parser) {
 		p.validator.requireExp = true
@@ -66,6 +70,9 @@ func WithExpirationRequired() ParserOption {
 
 // WithNotBeforeRequired returns the ParserOption to make nbf claim required.
 // By default nbf claim is optional.
+//
+// As with [WithExpirationRequired], a present-but-unusable nbf is rejected with
+// [ErrInvalidType] regardless of this option.
 func WithNotBeforeRequired() ParserOption {
 	return func(p *Parser) {
 		p.validator.requireNbf = true

@@ -37,6 +37,24 @@ and changes are:
     standard, but unfortunately some of the major identity providers issue some
     of these incorrect tokens. Both options are disabled by default.
 
+### Explicit JSON `null` in a registered claim
+
+A claim that is *absent* and a claim that is present as an explicit JSON `null`
+are different things, and v5 keeps them apart:
+
+  * An absent claim is *missing*. It fails with
+    `ErrTokenRequiredClaimMissing` only if validation requires that claim
+    (`WithExpirationRequired`, `WithNotBeforeRequired`, `WithIssuedAt`,
+    `WithAudience`, `WithIssuer`, `WithSubject`).
+  * A claim that is present but unusable, including an explicit `null`, is an
+    *invalid type*. It fails with `ErrInvalidType` even when that claim is not
+    required. In particular, a token with `"exp": null` is rejected rather than
+    being treated as a token that never expires.
+
+This holds identically for `MapClaims`, `RegisteredClaims` and any custom type
+embedding `RegisteredClaims`. The single exception is `aud`: a `null` audience
+means "no audience", which is the same as an absent `aud` claim.
+
 ## Changes to the `Claims` interface
 
 ### Complete Restructuring

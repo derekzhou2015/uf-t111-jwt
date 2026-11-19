@@ -168,10 +168,10 @@ func (v *Validator) Validate(claims Claims) error {
 // will succeed if cmp < exp. Additional leeway is taken into account.
 //
 // If exp is not set, it will succeed if the claim is not required,
-// otherwise ErrTokenRequiredClaimMissing will be returned.
-//
-// Additionally, if any error occurs while retrieving the claim, e.g., when its
-// the wrong type, an ErrTokenUnverifiable error will be returned.
+// otherwise ErrTokenRequiredClaimMissing will be returned. An exp claim that is
+// present but cannot be interpreted, e.g., an explicit JSON null or the wrong
+// type, is never treated as absent: it fails with [ErrInvalidType], even when
+// the claim is not required.
 func (v *Validator) verifyExpiresAt(claims Claims, cmp time.Time, required bool) error {
 	exp, err := claims.GetExpirationTime()
 	if err != nil {
@@ -189,10 +189,8 @@ func (v *Validator) verifyExpiresAt(claims Claims, cmp time.Time, required bool)
 // will succeed if cmp >= iat. Additional leeway is taken into account.
 //
 // If iat is not set, it will succeed if the claim is not required,
-// otherwise ErrTokenRequiredClaimMissing will be returned.
-//
-// Additionally, if any error occurs while retrieving the claim, e.g., when its
-// the wrong type, an ErrTokenUnverifiable error will be returned.
+// otherwise ErrTokenRequiredClaimMissing will be returned. An iat claim that is
+// present but cannot be interpreted is reported as [ErrInvalidType].
 func (v *Validator) verifyIssuedAt(claims Claims, cmp time.Time, required bool) error {
 	iat, err := claims.GetIssuedAt()
 	if err != nil {
@@ -210,10 +208,8 @@ func (v *Validator) verifyIssuedAt(claims Claims, cmp time.Time, required bool) 
 // will return true if cmp >= nbf. Additional leeway is taken into account.
 //
 // If nbf is not set, it will succeed if the claim is not required,
-// otherwise ErrTokenRequiredClaimMissing will be returned.
-//
-// Additionally, if any error occurs while retrieving the claim, e.g., when its
-// the wrong type, an ErrTokenUnverifiable error will be returned.
+// otherwise ErrTokenRequiredClaimMissing will be returned. An nbf claim that is
+// present but cannot be interpreted is reported as [ErrInvalidType].
 func (v *Validator) verifyNotBefore(claims Claims, cmp time.Time, required bool) error {
 	nbf, err := claims.GetNotBefore()
 	if err != nil {
@@ -272,10 +268,9 @@ func (v *Validator) verifyAudience(claims Claims, cmp []string, expectAllAud boo
 // verifyIssuer compares the iss claim in claims against cmp.
 //
 // If iss is not set, it will succeed if the claim is not required,
-// otherwise ErrTokenRequiredClaimMissing will be returned.
-//
-// Additionally, if any error occurs while retrieving the claim, e.g., when its
-// the wrong type, an ErrTokenUnverifiable error will be returned.
+// otherwise ErrTokenRequiredClaimMissing will be returned. An iss claim that is
+// present but cannot be interpreted is reported as [ErrInvalidType] rather than
+// as a missing claim.
 func (v *Validator) verifyIssuer(claims Claims, cmp string, required bool) error {
 	iss, err := claims.GetIssuer()
 	if err != nil {
@@ -292,10 +287,9 @@ func (v *Validator) verifyIssuer(claims Claims, cmp string, required bool) error
 // verifySubject compares the sub claim against cmp.
 //
 // If sub is not set, it will succeed if the claim is not required,
-// otherwise ErrTokenRequiredClaimMissing will be returned.
-//
-// Additionally, if any error occurs while retrieving the claim, e.g., when its
-// the wrong type, an ErrTokenUnverifiable error will be returned.
+// otherwise ErrTokenRequiredClaimMissing will be returned. A sub claim that is
+// present but cannot be interpreted is reported as [ErrInvalidType] rather than
+// as a missing claim.
 func (v *Validator) verifySubject(claims Claims, cmp string, required bool) error {
 	sub, err := claims.GetSubject()
 	if err != nil {
