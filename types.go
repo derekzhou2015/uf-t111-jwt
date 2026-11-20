@@ -125,6 +125,12 @@ func (s *ClaimStrings) UnmarshalJSON(data []byte) (err error) {
 			aud = append(aud, vs)
 		}
 	case nil:
+		// A null audience means "no audience", the same as an absent aud
+		// claim. Clearing the receiver keeps that meaning even when the caller
+		// supplied a default audience, which encoding/json would otherwise
+		// leave in place. MapClaims already ends up without an audience for a
+		// null aud, so both containers agree.
+		*s = nil
 		return nil
 	default:
 		return ErrInvalidType

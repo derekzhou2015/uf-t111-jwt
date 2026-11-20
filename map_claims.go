@@ -2,7 +2,6 @@ package jwt
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
 // MapClaims is a claims type that uses the map[string]any for JSON
@@ -42,6 +41,10 @@ func (m MapClaims) GetSubject() (string, error) {
 // parseNumericDate tries to parse a key in the map claims type as a number
 // date. This will succeed, if the underlying type is either a [float64] or a
 // [json.Number]. Otherwise, nil will be returned.
+//
+// A claim that is present with an explicit null is present but unusable and is
+// reported as [ErrInvalidType], matching [RegisteredClaims]; only an absent
+// claim means "no value".
 func (m MapClaims) parseNumericDate(key string) (*NumericDate, error) {
 	v, ok := m[key]
 	if !ok {
@@ -57,7 +60,7 @@ func (m MapClaims) parseNumericDate(key string) (*NumericDate, error) {
 		return newNumericDateFromSeconds(v), nil
 	}
 
-	return nil, newError(fmt.Sprintf("%s is invalid", key), ErrInvalidType)
+	return nil, invalidClaimError(key)
 }
 
 // parseClaimsString tries to parse a key in the map claims type as a
@@ -73,7 +76,7 @@ func (m MapClaims) parseClaimsString(key string) (ClaimStrings, error) {
 		for _, a := range v {
 			vs, ok := a.(string)
 			if !ok {
-				return nil, newError(fmt.Sprintf("%s is invalid", key), ErrInvalidType)
+				return nil, invalidClaimError(key)
 			}
 			cs = append(cs, vs)
 		}
@@ -86,7 +89,7 @@ func (m MapClaims) parseClaimsString(key string) (ClaimStrings, error) {
 		// is reported as an error to stay consistent with the other accessors
 		// such as parseString and parseNumericDate, as well as with the
 		// per-element type check performed on []any audiences above.
-		return nil, newError(fmt.Sprintf("%s is invalid", key), ErrInvalidType)
+		return nil, invalidClaimError(key)
 	}
 
 	return cs, nil
@@ -95,6 +98,10 @@ func (m MapClaims) parseClaimsString(key string) (ClaimStrings, error) {
 // parseString tries to parse a key in the map claims type as a [string] type.
 // If the key does not exist, an empty string is returned. If the key has the
 // wrong type, an error is returned.
+//
+// A claim that is present with an explicit null is present but unusable and is
+// reported as [ErrInvalidType], matching [RegisteredClaims]; only an absent
+// claim means "no value".
 func (m MapClaims) parseString(key string) (string, error) {
 	var (
 		ok  bool
@@ -108,7 +115,7 @@ func (m MapClaims) parseString(key string) (string, error) {
 
 	iss, ok = raw.(string)
 	if !ok {
-		return "", newError(fmt.Sprintf("%s is invalid", key), ErrInvalidType)
+		return "", invalidClaimError(key)
 	}
 
 	return iss, nil

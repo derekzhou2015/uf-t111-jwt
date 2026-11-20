@@ -184,6 +184,15 @@ func (p *Parser) ParseUnverified(tokenString string, claims Claims) (token *Toke
 		return token, parts, newError("could not JSON decode claim", ErrTokenMalformed, err)
 	}
 
+	// Structured claims cannot represent an explicit JSON null after decoding,
+	// so record which registered claims were null while the payload is still
+	// available. This makes [RegisteredClaims] classify such a claim the same
+	// way as [MapClaims] does. MapClaims keeps the nil value itself and needs
+	// no record.
+	if c, ok := token.Claims.(explicitNullClaims); ok {
+		c.setExplicitNullClaims(detectExplicitNullClaims(claimBytes))
+	}
+
 	// Lookup signature method
 	if method, ok := token.Header[HeaderAlgorithm].(string); ok {
 		if token.Method = GetSigningMethod(method); token.Method == nil {
